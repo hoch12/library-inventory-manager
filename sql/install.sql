@@ -1,3 +1,6 @@
+CREATE DATABASE library;
+USE library;
+
 DROP VIEW IF EXISTS view_active_books;
 DROP VIEW IF EXISTS view_overdue_loans;
 DROP TABLE IF EXISTS loans;
