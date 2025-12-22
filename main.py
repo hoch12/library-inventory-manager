@@ -1,38 +1,61 @@
-import mysql.connector
-from config.db_config import db_config
+from dao.book_dao import BookDao
+
+# Initialize our data access object
+book_manager = BookDao()
 
 
-def otestuj_pripojeni():
-    print("--- Zkouším se připojit k databázi... ---")
+def list_books():
+    """Fetches and displays all books using the DAO."""
+    print("\n--- BOOK LIST ---")
+    books = book_manager.get_all_books()
 
+    if not books:
+        print("No books found in the library.")
+        return
+
+    for book in books:
+        # book[0]=id, book[1]=title, book[2]=price, book[3]=condition
+        print(f"[{book[0]}] {book[1]} | ${book[2]} | Condition: {book[3]}")
+
+
+def add_new_book():
+    """Collects user input and uses DAO to save a new book."""
+    print("\n--- ADD NEW BOOK ---")
+    title = input("Enter title: ")
+
+    # Simple validation to prevent crashing if user enters text instead of number
     try:
-        connection = mysql.connector.connect(**db_config)
+        price = float(input("Enter price (e.g., 19.99): "))
+    except ValueError:
+        print("Invalid price format. Operation cancelled.")
+        return
 
-        if connection.is_connected():
-            print("ÚSPĚCH! Jsi připojen k databázi:", db_config['database'])
+    condition = input("Enter condition (new/used/damaged): ")
 
-            cursor = connection.cursor()
+    # Hardcoded values for now (we can improve this later)
+    category_id = 1
+    default_date = "2025-01-01"
 
-            query = "SELECT title, price FROM books;"
-            cursor.execute(query)
-
-            knihy = cursor.fetchall()
-
-            print(f"\nNalezeno {cursor.rowcount} knih:")
-            print("-" * 30)
-            for kniha in knihy:
-                print(f"{kniha[0]} (Cena: {kniha[1]} Kč)")
-
-    except mysql.connector.Error as e:
-        print("CHYBA: Něco se pokazilo při připojování.")
-        print(f"Detail chyby: {e}")
-
-    finally:
-        if 'connection' in locals() and connection.is_connected():
-            cursor.close()
-            connection.close()
-            print("\n--- Připojení ukončeno ---")
+    # Call the DAO to save the data
+    book_manager.add_book(title, category_id, price, condition, default_date)
 
 
+# --- Main Application Loop ---
 if __name__ == "__main__":
-    otestuj_pripojeni()
+    while True:
+        print("\n=== LIBRARY MENU ===")
+        print("1. List all books")
+        print("2. Add a new book")
+        print("0. Exit")
+
+        choice = input("Choose an option: ")
+
+        if choice == "1":
+            list_books()
+        elif choice == "2":
+            add_new_book()
+        elif choice == "0":
+            print("Exiting application. Goodbye!")
+            break
+        else:
+            print("Invalid choice, please try again.")
