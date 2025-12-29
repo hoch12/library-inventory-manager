@@ -76,6 +76,20 @@ def delete_book(id):
     return redirect('/')
 
 
+@app.route('/borrow/<int:id>', methods=['GET', 'POST'])
+def borrow_book(id):
+    if request.method == 'POST':
+        borrower = request.form['borrower_name']
+        if book_dao.create_loan(id, borrower):
+            flash(f"Book borrowed to {borrower}.", "success")
+        else:
+            flash("Error creating loan.", "danger")
+        return redirect('/')
+
+    book, _ = book_dao.get_book_by_id(id)
+    return render_template('borrow.html', book=book)
+
+
 @app.route('/report')
 def report():
     try:

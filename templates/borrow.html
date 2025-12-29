@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">Borrow Book</h4>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">Book: {{ book[1] }}</h5>
+                <p>Please enter the name of the person borrowing this book.</p>
+
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Borrower Name</label>
+                        <input type="text" name="borrower_name" class="form-control" required placeholder="e.g. John Doe">
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">Confirm Loan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

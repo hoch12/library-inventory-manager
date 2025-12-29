@@ -28,6 +28,7 @@
                     <td class="fw-bold">{{ book[3] }}</td>
                     <td>{{ book[4] }}</td>
                     <td>
+                        <a href="/borrow/{{ book[0] }}" class="btn btn-sm btn-success">Borrow</a>
                         <a href="/edit/{{ book[0] }}" class="btn btn-sm btn-primary">Edit</a>
                         <a href="/delete/{{ book[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
                     </td>

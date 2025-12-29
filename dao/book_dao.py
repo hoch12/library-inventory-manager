@@ -98,3 +98,17 @@ class BookDao(BaseDao):
         finally:
             cursor.close()
             conn.close()
+
+    def create_loan(self, book_id, borrower_name):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            query = "INSERT INTO loans (book_id, borrower_name, loan_date) VALUES (%s, %s, NOW())"
+            cursor.execute(query, (book_id, borrower_name))
+            conn.commit()
+            return True
+        except Exception as e:
+            return False
+        finally:
+            cursor.close()
+            conn.close()
