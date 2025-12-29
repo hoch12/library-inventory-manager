@@ -1,88 +1,75 @@
-CREATE DATABASE library;
-USE library;
+DROP DATABASE IF EXISTS library_db;
+CREATE DATABASE library_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE library_db;
 
-DROP VIEW IF EXISTS view_active_books;
-DROP VIEW IF EXISTS view_overdue_loans;
-DROP TABLE IF EXISTS loans;
-DROP TABLE IF EXISTS book_author;
-DROP TABLE IF EXISTS books;
-DROP TABLE IF EXISTS authors;
-DROP TABLE IF EXISTS categories;
-
+-- 1. Tabulka kategorií (Bool typ)
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    code VARCHAR(10) NOT NULL UNIQUE,
-    label VARCHAR(50) NOT NULL,
+    name VARCHAR(50) NOT NULL,
     is_active TINYINT(1) DEFAULT 1
 );
 
+-- 2. Tabulka autorů
 CREATE TABLE authors (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    birth_year INT
+    name VARCHAR(100) NOT NULL
 );
 
+-- 3. Tabulka knih (Float, Enum, Date typy)
 CREATE TABLE books (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
-    category_id INT NOT NULL,
     price FLOAT NOT NULL,
     condition_status ENUM('new', 'used', 'damaged') NOT NULL,
-    publication_date DATE NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE RESTRICT
+    publication_date DATE DEFAULT (CURRENT_DATE),
+    category_id INT,
+    FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
-CREATE TABLE book_author (
-    book_id INT NOT NULL,
-    author_id INT NOT NULL,
+-- 4. Vazební tabulka M:N (Kniha <-> Autoři)
+CREATE TABLE book_authors (
+    book_id INT,
+    author_id INT,
     PRIMARY KEY (book_id, author_id),
     FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES authors(id) ON DELETE CASCADE
 );
 
+-- 5. Tabulka výpůjček
 CREATE TABLE loans (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    book_id INT NOT NULL,
-    borrower_name VARCHAR(100) NOT NULL,
-    borrowed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    returned_at DATETIME NULL,
-    FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE RESTRICT
+    book_id INT,
+    borrower_name VARCHAR(100),
+    loan_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (book_id) REFERENCES books(id)
 );
 
-CREATE VIEW view_active_books AS
-SELECT b.id, b.title, c.label AS category, b.price
+-- VIEW 1: Detailní přehled knih (Povinný pohled č. 1)
+CREATE VIEW view_book_details AS
+SELECT
+    b.id,
+    b.title,
+    c.name AS category_name,
+    b.price,
+    b.condition_status,
+    GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
 FROM books b
-JOIN categories c ON b.category_id = c.id
-WHERE c.is_active = 1;
+LEFT JOIN categories c ON b.category_id = c.id
+LEFT JOIN book_authors ba ON b.id = ba.book_id
+LEFT JOIN authors a ON ba.author_id = a.id
+GROUP BY b.id;
 
-CREATE VIEW view_overdue_loans AS
-SELECT l.id, l.borrower_name, b.title, l.borrowed_at
-FROM loans l
-JOIN books b ON l.book_id = b.id
-WHERE l.returned_at IS NULL;
+-- VIEW 2: Statistiky (Povinný pohled č. 2)
+CREATE VIEW view_library_stats AS
+SELECT
+    c.name AS category_name,
+    COUNT(b.id) AS total_books,
+    IFNULL(SUM(b.price), 0) AS total_value,
+    IFNULL(AVG(b.price), 0) AS avg_price
+FROM categories c
+LEFT JOIN books b ON c.id = b.category_id
+GROUP BY c.id, c.name;
 
-INSERT INTO categories (code, label, is_active) VALUES
-('SCI-FI', 'Science Fiction', 1),
-('ROM', 'Romány', 1),
-('EDU', 'Učebnice', 1),
-('OLD', 'Vyřazené', 0);
-
-INSERT INTO authors (name, birth_year) VALUES
-('Karel Čapek', 1890),
-('Isaac Asimov', 1920),
-('J.K. Rowling', 1965);
-
-INSERT INTO books (title, category_id, price, condition_status, publication_date) VALUES
-('R.U.R.', 1, 150.50, 'used', '1920-01-01'),
-('Válka s Mloky', 1, 200.00, 'new', '1936-01-01'),
-('Harry Potter 1', 2, 499.90, 'damaged', '1997-06-26'),
-('Matematika pro SŠ', 3, 350.00, 'new', '2015-09-01');
-
-INSERT INTO book_author (book_id, author_id) VALUES
-(1, 1), -- RUR - Čapek
-(2, 1), -- Mloky - Čapek
-(3, 3); -- Harry Potter - Rowling
-
-INSERT INTO loans (book_id, borrower_name, borrowed_at) VALUES
-(1, 'Jan Novák', NOW());
+-- Vložení testovacích dat
+INSERT INTO categories (name, is_active) VALUES ('Sci-Fi', 1), ('Učebnice', 1), ('Romány', 1);
+INSERT INTO authors (name) VALUES ('Karel Čapek'), ('J.K. Rowling'), ('Isaac Asimov');
