@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Edit Book</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">Title</label>
+                        <input type="text" name="title" class="form-control" value="{{ book[1] }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Price</label>
+                        <input type="number" step="0.1" name="price" class="form-control" value="{{ book[2] }}" required>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Category</label>
+                            <select name="category_id" class="form-select">
+                                {% for c in categories %}
+                                <option value="{{ c[0] }}" {% if c[0] == book[5] %}selected{% endif %}>{{ c[1] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Condition</label>
+                            <select name="status" class="form-select">
+                                <option value="new" {% if book[3] == 'new' %}selected{% endif %}>New</option>
+                                <option value="used" {% if book[3] == 'used' %}selected{% endif %}>Used</option>
+                                <option value="damaged" {% if book[3] == 'damaged' %}selected{% endif %}>Damaged</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Authors (Hold CTRL for multiple)</label>
+                        <select name="authors" class="form-select" multiple required style="height: 120px;">
+                            {% for a in authors %}
+                            <option value="{{ a[0] }}" {% if a[0] in current_authors %}selected{% endif %}>{{ a[1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Update Book</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

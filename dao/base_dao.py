@@ -7,8 +7,7 @@ class BaseDao:
 
     def get_connection(self):
         try:
-            connection = mysql.connector.connect(**self.config)
-            return connection
+            return mysql.connector.connect(**self.config)
         except mysql.connector.Error as err:
-            print(f"Chyba připojení k DB: {err}")
+            print(f"Database connection error: {err}")
             raise

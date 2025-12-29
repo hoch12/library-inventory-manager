@@ -1,0 +1,29 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<h2 class="mb-4">Management Report</h2>
+<div class="alert alert-info">
+    Data source: Database VIEW <code>view_library_stats</code>.
+</div>
+
+<table class="table table-bordered table-striped bg-white">
+    <thead class="table-dark">
+        <tr>
+            <th>Category</th>
+            <th>Total Books</th>
+            <th>Total Inventory Value</th>
+            <th>Average Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in stats %}
+        <tr>
+            <td><strong>{{ row[0] }}</strong></td>
+            <td>{{ row[1] }}</td>
+            <td>{{ row[2] }}</td>
+            <td>{{ row[3]|round(2) }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

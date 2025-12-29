@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">JSON Data Import</h4>
+    </div>
+    <div class="card-body">
+        <p>Upload a JSON file to bulk insert books.</p>
+
+        <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">Select JSON File</label>
+                <input type="file" name="file" class="form-control" accept=".json" required>
+            </div>
+            <button type="submit" class="btn btn-warning">Upload and Process</button>
+        </form>
+
+        <hr class="my-4">
+
+        <h5>Example JSON Format:</h5>
+        <pre class="bg-dark text-white p-3 rounded">
+[
+  {
+    "title": "Example Book Title",
+    "price": 49.99,
+    "category_id": 1,
+    "authors": [1, 2]
+  }
+]
+        </pre>
+    </div>
+</div>
+{% endblock %}

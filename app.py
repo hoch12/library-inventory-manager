@@ -4,9 +4,8 @@ from dao.report_dao import ReportDao
 from services.import_service import ImportService
 
 app = Flask(__name__)
-app.secret_key = "super_tajny_klic_pro_session"
+app.secret_key = "secret_key_for_session"
 
-# Inicializace instancí
 book_dao = BookDao()
 report_dao = ReportDao()
 import_service = ImportService()
@@ -18,7 +17,7 @@ def index():
         books = book_dao.get_all_books()
         return render_template('index.html', books=books)
     except Exception as e:
-        return f"Kritická chyba aplikace: {e}"
+        return f"Database Error: {e}"
 
 
 @app.route('/add', methods=['GET', 'POST'])
@@ -33,16 +32,48 @@ def add_book():
 
             book_dao.add_book_transaction(title, price, status, category_id, author_ids)
 
-            flash("Kniha byla úspěšně uložena.", "success")
+            flash("Book added successfully.", "success")
             return redirect('/')
 
         except ValueError:
-            flash("Chyba: Cena musí být číslo!", "danger")
+            flash("Error: Price must be a number.", "danger")
         except Exception as e:
-            flash(f"Chyba při ukládání: {e}", "danger")
+            flash(f"Error saving book: {e}", "danger")
 
     authors, categories = book_dao.get_authors_and_categories()
     return render_template('add_book.html', authors=authors, categories=categories)
+
+
+@app.route('/edit/<int:id>', methods=['GET', 'POST'])
+def edit_book(id):
+    if request.method == 'POST':
+        try:
+            title = request.form['title']
+            price = float(request.form['price'])
+            status = request.form['status']
+            category_id = int(request.form['category_id'])
+            author_ids = request.form.getlist('authors')
+
+            book_dao.update_book(id, title, price, status, category_id, author_ids)
+            flash("Book updated successfully.", "success")
+            return redirect('/')
+        except Exception as e:
+            flash(f"Error updating book: {e}", "danger")
+
+    book, current_authors = book_dao.get_book_by_id(id)
+    all_authors, categories = book_dao.get_authors_and_categories()
+    return render_template('edit_book.html', book=book, current_authors=current_authors, authors=all_authors,
+                           categories=categories)
+
+
+@app.route('/delete/<int:id>')
+def delete_book(id):
+    try:
+        book_dao.delete_book(id)
+        flash("Book deleted successfully.", "success")
+    except Exception as e:
+        flash(f"Error deleting book: {e}", "danger")
+    return redirect('/')
 
 
 @app.route('/report')
@@ -51,30 +82,28 @@ def report():
         stats = report_dao.get_stats()
         return render_template('report.html', stats=stats)
     except Exception as e:
-        flash(f"Nepodařilo se načíst report: {e}", "danger")
+        flash(f"Could not load report: {e}", "danger")
         return redirect('/')
 
 
 @app.route('/import', methods=['GET', 'POST'])
 def import_data():
     if request.method == 'POST':
-        # Kontrola, zda byl nahrán soubor
         if 'file' not in request.files:
-            flash("Nebyl vybrán žádný soubor.", "warning")
+            flash("No file selected.", "warning")
             return redirect(request.url)
 
         file = request.files['file']
 
         if file.filename == '':
-            flash("Název souboru je prázdný.", "warning")
+            flash("Filename is empty.", "warning")
             return redirect(request.url)
 
         try:
-            # Volání služby pro zpracování
             count = import_service.process_json(file)
-            flash(f"Úspěšně importováno {count} knih.", "success")
+            flash(f"Successfully imported {count} books.", "success")
         except Exception as e:
-            flash(f"Import selhal: {e}", "danger")
+            flash(f"Import failed: {e}", "danger")
 
     return render_template('import.html')
 
