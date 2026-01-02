@@ -1,6 +1,6 @@
 {
     "host": "localhost",
     "user": "root",
-    "password": "Dom1204!",
+    "password": "[YOUR_PASSWORD]",
     "database": "library_db"
 }
