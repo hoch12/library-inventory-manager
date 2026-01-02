@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="card shadow">
+    <div class="card-header bg-warning text-dark">
+        <h4 class="mb-0">Active Loans</h4>
+    </div>
+    <div class="card-body">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Book Title</th>
+                    <th>Borrower Name</th>
+                    <th>Loan Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for loan in loans %}
+                <tr>
+                    <td><strong>{{ loan[1] }}</strong></td>
+                    <td>{{ loan[2] }}</td>
+                    <td>{{ loan[3] }}</td>
+                    <td>
+                        <a href="/return/{{ loan[4] }}" class="btn btn-sm btn-success">Return Book</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="text-center">No active loans.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

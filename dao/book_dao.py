@@ -6,7 +6,17 @@ class BookDao(BaseDao):
     def get_all_books(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-        query = "SELECT b.id, b.title, c.name, b.price, b.condition_status, GROUP_CONCAT(a.name SEPARATOR ', ') as authors FROM books b LEFT JOIN categories c ON b.category_id = c.id LEFT JOIN book_authors ba ON b.id = ba.book_id LEFT JOIN authors a ON ba.author_id = a.id GROUP BY b.id ORDER BY b.id DESC"
+        query = """
+            SELECT b.id, b.title, c.name, b.price, b.condition_status, 
+                   GROUP_CONCAT(a.name SEPARATOR ', ') as authors,
+                   b.is_borrowed
+            FROM books b
+            LEFT JOIN categories c ON b.category_id = c.id
+            LEFT JOIN book_authors ba ON b.id = ba.book_id
+            LEFT JOIN authors a ON ba.author_id = a.id
+            GROUP BY b.id
+            ORDER BY b.id DESC
+        """
         cursor.execute(query)
         books = cursor.fetchall()
         cursor.close()
@@ -29,13 +39,10 @@ class BookDao(BaseDao):
     def get_authors_and_categories(self):
         conn = self.get_connection()
         cursor = conn.cursor()
-
         cursor.execute("SELECT id, name FROM authors")
         authors = cursor.fetchall()
-
         cursor.execute("SELECT id, name FROM categories WHERE is_active = 1")
         categories = cursor.fetchall()
-
         cursor.close()
         conn.close()
         return authors, categories
@@ -44,11 +51,9 @@ class BookDao(BaseDao):
         conn = self.get_connection()
         conn.autocommit = False
         cursor = conn.cursor()
-
         try:
             query_book = "INSERT INTO books (title, price, condition_status, category_id, publication_date) VALUES (%s, %s, %s, %s, NOW())"
             cursor.execute(query_book, (title, price, status, category_id))
-
             new_book_id = cursor.lastrowid
 
             query_relation = "INSERT INTO book_authors (book_id, author_id) VALUES (%s, %s)"
@@ -57,7 +62,6 @@ class BookDao(BaseDao):
 
             conn.commit()
             return True
-
         except Exception as e:
             conn.rollback()
             raise e
@@ -101,14 +105,54 @@ class BookDao(BaseDao):
 
     def create_loan(self, book_id, borrower_name):
         conn = self.get_connection()
+        conn.autocommit = False
         cursor = conn.cursor()
         try:
-            query = "INSERT INTO loans (book_id, borrower_name, loan_date) VALUES (%s, %s, NOW())"
-            cursor.execute(query, (book_id, borrower_name))
+            query_loan = "INSERT INTO loans (book_id, borrower_name, loan_date) VALUES (%s, %s, NOW())"
+            cursor.execute(query_loan, (book_id, borrower_name))
+
+            cursor.execute("UPDATE books SET is_borrowed = 1 WHERE id = %s", (book_id,))
+
             conn.commit()
             return True
         except Exception as e:
+            conn.rollback()
             return False
         finally:
             cursor.close()
             conn.close()
+
+    def return_book(self, book_id):
+        conn = self.get_connection()
+        conn.autocommit = False
+        cursor = conn.cursor()
+        try:
+            query_loan = "UPDATE loans SET returned_date = NOW() WHERE book_id = %s AND returned_date IS NULL"
+            cursor.execute(query_loan, (book_id,))
+
+            cursor.execute("UPDATE books SET is_borrowed = 0 WHERE id = %s", (book_id,))
+
+            conn.commit()
+            return True
+        except Exception as e:
+            conn.rollback()
+            return False
+        finally:
+            cursor.close()
+            conn.close()
+
+    def get_active_loans(self):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        query = """
+            SELECT l.id, b.title, l.borrower_name, l.loan_date, b.id
+            FROM loans l
+            JOIN books b ON l.book_id = b.id
+            WHERE l.returned_date IS NULL
+            ORDER BY l.loan_date DESC
+        """
+        cursor.execute(query)
+        loans = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return loans

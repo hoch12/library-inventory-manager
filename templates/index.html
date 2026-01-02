@@ -15,6 +15,7 @@
                     <th>Authors</th>
                     <th>Price</th>
                     <th>Condition</th>
+                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -25,17 +26,28 @@
                     <td><strong>{{ book[1] }}</strong></td>
                     <td><span class="badge bg-info text-dark">{{ book[2] }}</span></td>
                     <td>{{ book[5] }}</td>
-                    <td class="fw-bold">{{ book[3] }}</td>
+                    <td class="fw-bold">{{ book[3] }} CZK</td>
                     <td>{{ book[4] }}</td>
                     <td>
-                        <a href="/borrow/{{ book[0] }}" class="btn btn-sm btn-success">Borrow</a>
+                        {% if book[6] == 1 %}
+                            <span class="badge bg-danger">Borrowed</span>
+                        {% else %}
+                            <span class="badge bg-success">Available</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if book[6] == 0 %}
+                            <a href="/borrow/{{ book[0] }}" class="btn btn-sm btn-success">Borrow</a>
+                        {% else %}
+                             <a href="/return/{{ book[0] }}" class="btn btn-sm btn-warning">Return</a>
+                        {% endif %}
                         <a href="/edit/{{ book[0] }}" class="btn btn-sm btn-primary">Edit</a>
-                        <a href="/delete/{{ book[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this book?')">Delete</a>
+                        <a href="/delete/{{ book[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="text-center">No books found in database.</td>
+                    <td colspan="8" class="text-center">No books found.</td>
                 </tr>
                 {% endfor %}
             </tbody>

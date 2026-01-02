@@ -20,6 +20,16 @@ def index():
         return f"Database Error: {e}"
 
 
+@app.route('/loans')
+def loans():
+    try:
+        active_loans = book_dao.get_active_loans()
+        return render_template('loans.html', loans=active_loans)
+    except Exception as e:
+        flash(f"Error loading loans: {e}", "danger")
+        return redirect('/')
+
+
 @app.route('/add', methods=['GET', 'POST'])
 def add_book():
     if request.method == 'POST':
@@ -88,6 +98,15 @@ def borrow_book(id):
 
     book, _ = book_dao.get_book_by_id(id)
     return render_template('borrow.html', book=book)
+
+
+@app.route('/return/<int:id>')
+def return_book(id):
+    if book_dao.return_book(id):
+        flash("Book returned successfully.", "success")
+    else:
+        flash("Error returning book.", "danger")
+    return redirect('/')
 
 
 @app.route('/report')

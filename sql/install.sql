@@ -22,6 +22,7 @@ CREATE TABLE books (
     condition_status ENUM('new', 'used', 'damaged') NOT NULL,
     publication_date DATE DEFAULT (CURRENT_DATE),
     category_id INT,
+    is_borrowed TINYINT(1) DEFAULT 0,
     FOREIGN KEY (category_id) REFERENCES categories(id)
 );
 
@@ -38,16 +39,13 @@ CREATE TABLE loans (
     book_id INT,
     borrower_name VARCHAR(100),
     loan_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+    returned_date DATETIME NULL,
     FOREIGN KEY (book_id) REFERENCES books(id)
 );
 
 CREATE VIEW view_book_details AS
 SELECT
-    b.id,
-    b.title,
-    c.name AS category_name,
-    b.price,
-    b.condition_status,
+    b.id, b.title, c.name AS category_name, b.price, b.condition_status, b.is_borrowed,
     GROUP_CONCAT(a.name SEPARATOR ', ') AS authors
 FROM books b
 LEFT JOIN categories c ON b.category_id = c.id
