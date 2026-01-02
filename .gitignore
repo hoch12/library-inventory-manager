@@ -6,6 +6,5 @@ venv/
 
 .venv/
 
-config/db_config.json
 
 .DS_Store
